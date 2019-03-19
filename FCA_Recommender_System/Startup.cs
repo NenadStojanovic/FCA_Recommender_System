@@ -11,6 +11,8 @@ using Microsoft.Extensions.DependencyInjection;
 using FCA_Recommender_System.Data;
 using FCA_Recommender_System.Models;
 using FCA_Recommender_System.Services;
+using Microsoft.Extensions.FileProviders;
+using System.IO;
 
 namespace FCA_Recommender_System
 {
@@ -35,6 +37,10 @@ namespace FCA_Recommender_System
 
             // Add application services.
             services.AddTransient<IEmailSender, EmailSender>();
+
+            services.AddSingleton<IFileProvider>(
+                new PhysicalFileProvider(
+                    Path.Combine(Directory.GetCurrentDirectory(), "wwwroot")));
 
             services.AddMvc();
         }

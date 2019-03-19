@@ -19,6 +19,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\RecommenderEngine\RecommenderEngine.csproj" />
     <ProjectReference Include="..\StorageService\StorageService.csproj" />
   </ItemGroup>
 
