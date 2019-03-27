@@ -1,4 +1,4 @@
-﻿
+﻿@model FCA_Recommender_System.Models.ControlPanelViewModel
 @{
     ViewData["Title"] = "ControlPanel";
 }
@@ -6,9 +6,7 @@
 <h2>ControlPanel</h2>
 
 <div>
-    <form asp-controller="Home" asp-action="UploadFile" method="post"
-          enctype="multipart/form-data">
-
+    <form asp-controller="Home" asp-action="UploadFile" method="post" enctype="multipart/form-data">
         <input type="file" name="file" />
         <button type="submit">Upload File</button>
     </form>

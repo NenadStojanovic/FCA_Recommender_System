@@ -35,8 +35,8 @@ namespace FCA_Recommender_System.Controllers
 
         public IActionResult ControlPanel()
         {
-
-            return View();
+            var model = new ControlPanelViewModel();
+            return View(model);
         }
 
         public IActionResult Error()

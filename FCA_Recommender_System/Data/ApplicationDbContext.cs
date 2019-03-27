@@ -15,6 +15,8 @@ namespace FCA_Recommender_System.Data
         public DbSet<Category> Categories { get; set; }
         public DbSet<LikedMovies> LikedMovies { get; set; }
         public DbSet<MovieCategory> MovieCategories { get; set; }
+        public DbSet<ConfigurationAndStatistics> ConfigurationAndStatistics { get; set; }
+
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
             : base(options)
         {
