@@ -4,10 +4,9 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
-using FCA_Recommender_System.Models;
 using StorageService.Models;
 
-namespace FCA_Recommender_System.Data
+namespace StorageService
 {
     public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     {

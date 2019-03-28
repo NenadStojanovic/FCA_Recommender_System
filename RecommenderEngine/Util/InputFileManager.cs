@@ -32,7 +32,7 @@ namespace RecommenderEngine.Util
         }
 
 
-        public void GetMoveisData(List<Movie> movies)
+        public void GetMoviesData(List<Movie> movies)
         {
             foreach (var item in movies)
             {

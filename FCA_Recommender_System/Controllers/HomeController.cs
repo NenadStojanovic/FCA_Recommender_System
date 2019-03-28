@@ -8,12 +8,21 @@ using FCA_Recommender_System.Models;
 using System.IO;
 using Microsoft.AspNetCore.Http;
 using RecommenderEngine.Util;
+using StorageService.Interfaces;
+using StorageService;
 
 namespace FCA_Recommender_System.Controllers
 {
     public class HomeController : Controller
     {
         InputFileManager InputFileManager = new InputFileManager();
+        private readonly IStorageService StorageService;
+
+        public HomeController()
+        {
+            StorageService = new DBStorageService();
+        }
+
         public IActionResult Index()
         {
             return View();
@@ -62,7 +71,12 @@ namespace FCA_Recommender_System.Controllers
             var res = InputFileManager.ParseFile(path);
             FileInfo fileInfo = new FileInfo(path);
             fileInfo.Delete();
-            InputFileManager.GetMoveisData(res);
+            InputFileManager.GetMoviesData(res);
+
+            // saving movies into database
+
+            // saving categories into database
+
             return RedirectToAction("Index");
         }
     }

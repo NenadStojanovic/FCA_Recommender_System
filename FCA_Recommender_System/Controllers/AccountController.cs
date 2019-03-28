@@ -13,6 +13,7 @@ using Microsoft.Extensions.Options;
 using FCA_Recommender_System.Models;
 using FCA_Recommender_System.Models.AccountViewModels;
 using FCA_Recommender_System.Services;
+using StorageService;
 
 namespace FCA_Recommender_System.Controllers
 {
