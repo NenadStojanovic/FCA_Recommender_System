@@ -26,7 +26,11 @@ namespace FCA_Recommender_System.Controllers
 
         public IActionResult Index()
         {
-            return View();
+            var vmodel = new HomeIndexViewModel();
+            vmodel.Movies = StorageService.GetAllMovies().ToList();
+            vmodel.Categories = StorageService.GetAllCategories().ToList();
+
+            return View(vmodel);
         }
 
         public IActionResult About()

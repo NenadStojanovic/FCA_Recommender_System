@@ -1,7 +1,12 @@
-﻿@{
+﻿@model HomeIndexViewModel
+@{
     ViewData["Title"] = "Home Page";
 }
-
+<h1>
+    <a href="/Home/ControlPanel">Control Panel</a>
+</h1>
+<hr />
+<div>
 @*<div id="myCarousel" class="carousel slide" data-ride="carousel" data-interval="6000">
     <ol class="carousel-indicators">
         <li data-target="#myCarousel" data-slide-to="0" class="active"></li>
@@ -104,9 +109,51 @@
         </ul>
     </div>
 </div>*@
+</div>
 
-<div>
-    <a href="/Home/ControlPanel">Control Panel</a>
+<div class="row">
+    <div class="col-md-6">
+        <h2>Movies</h2>
+        <table class="table table-bordered table-striped">
+            <thead>
+                <tr>
+                    <td>Name</td>
+                    <td>Director</td>
+                    @*<td>Data link</td>*@
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var movie in Model.Movies)
+                {
+                    <tr>
+                        <td>@movie.Name</td>
+                        <td>@movie.Director</td>
+                        @*<td>@movie.DataLink</td>*@
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    <div class="col-md-6">
+        <h2>Categories</h2>
+        <div class="table-responsive">
+            <table class="table table-bordered table-striped">
+                <thead>
+                    <tr>
+                        <td>Name</td>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var category in Model.Categories)
+                    {
+                        <tr>
+                            <td>@category.Title</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
 </div>
 
 
