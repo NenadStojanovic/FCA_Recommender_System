@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using StorageService.Models;
 
-namespace StorageService
+namespace FCA_Recommender_System.Data
 {
     public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     {

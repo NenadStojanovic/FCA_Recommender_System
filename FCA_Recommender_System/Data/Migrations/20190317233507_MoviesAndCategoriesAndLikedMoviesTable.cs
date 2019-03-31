@@ -15,7 +15,7 @@ namespace FCA_Recommender_System.Data.Migrations
                 {
                     ID = table.Column<int>(nullable: false)
                         .Annotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn),
-                    Title = table.Column<int>(nullable: false)
+                    Title = table.Column<string>(nullable: false)
                 },
                 constraints: table =>
                 {

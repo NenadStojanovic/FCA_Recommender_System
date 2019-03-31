@@ -72,7 +72,7 @@ namespace FCA_Recommender_System.Controllers
             var res = InputFileManager.ParseFile(path).Take(20).ToList();
             FileInfo fileInfo = new FileInfo(path);
             fileInfo.Delete();
-            InputFileManager.GetMoveisData(res);
+            InputFileManager.GetMoviesData(res);
 
             // clear
             StorageService.RemoveAllMovieCategories();
