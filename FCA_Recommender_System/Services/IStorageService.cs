@@ -17,9 +17,13 @@ namespace FCA_Recommender_System.Services
         void AddCategories(IEnumerable<Category> categories);
         void RemoveAllCategories();
 
+        IEnumerable<MovieCategory> GetAllMovieCategories();
         IEnumerable<Category> GetMovieCategories(int movieId);
 
         void AddMovieCategories(IEnumerable<MovieCategory> movieCategories);
         void RemoveAllMovieCategories();
+
+        ConfigurationAndStatistics GetConfiguration();
+        void UpdateConfiguration(ConfigurationAndStatistics configuration);
     }
 }

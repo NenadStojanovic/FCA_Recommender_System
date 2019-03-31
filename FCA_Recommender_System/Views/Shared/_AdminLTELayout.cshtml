@@ -2,6 +2,9 @@
 
 <html>
 <head>
+    <meta charset="utf-8" />
+    <title>@ViewData["Title"]</title>
+
     <meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
     <!-- Bootstrap 3.3.7 -->
     <link rel="stylesheet" href="~/bower_components/bootstrap/dist/css/bootstrap.min.css">
@@ -16,7 +19,27 @@
     <link rel="stylesheet" href="~/dist/css/skins/_all-skins.min.css">
 </head>
 <body>
-    <div class="container body-content">
+    <nav class="navbar navbar-inverse navbar-fixed-top">
+        <div class="container">
+            <div class="navbar-header">
+                <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+                    <span class="sr-only">Toggle navigation</span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+                <a asp-area="" asp-controller="Home" asp-action="Index" class="navbar-brand">FCA_Recommender_System</a>
+            </div>
+            <div class="navbar-collapse collapse">
+                <ul class="nav navbar-nav">
+                    <li><a asp-area="" asp-controller="Home" asp-action="Index">Home</a></li>
+                    <li><a asp-area="" asp-controller="Home" asp-action="ControlPanel">Control panel</a></li>
+                </ul>
+                @await Html.PartialAsync("_LoginPartial")
+            </div>
+        </div>
+    </nav>
+    <div style="margin-top: 50px;" class="container body-content">
         @RenderBody()
         <hr />
         <footer>

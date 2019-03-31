@@ -6,11 +6,90 @@
 }
 
 <h2>ControlPanel</h2>
-
-<div class="box box-body box-primary">
-    <form asp-controller="Home" asp-action="UploadFile" method="post" enctype="multipart/form-data">
-        <input type="file" name="file" class="btn btn-primary btn-file" />
-        <button type="submit" class="btn btn-primary" style="margin-top:10px">Upload File</button>
-    </form>
+<hr />
+<div class="box box-solid box-primary">
+    <div class="box-header with-border">
+        <h3 class="box-title">Upoload dbipedia data tsv. file with movies and categories data</h3>
+    </div>
+    <div class="box-body">
+        <form asp-controller="Home" asp-action="UploadFile" method="post" enctype="multipart/form-data">
+            <input style="display: none;" id="file-upload" type="file" name="file" class="btn btn-primary btn-file" />
+            <label for="file-upload">
+                <span class="btn btn-success btn-sm">
+                    <span class="fa fa-upload"></span>
+                    <span id="file-path"></span>
+                </span>
+            </label>
+            @section scripts {
+                <script>
+                $('#file-upload').change(function () {
+                    var filePath = $('#file-upload').val();
+                    $("#file-path").html(filePath);
+                });
+                </script>
+            }
+            <button type="submit" class="btn btn-primary btn-sm no-margin" style="margin-top:10px">Upload File</button>
+        </form>
+    </div>
 </div>
 
+<div class="box box-solid box-info">
+        <div class="box-header with-border">
+            <h3 class="box-title">Formal concepts lattice info</h3>
+        </div>
+        <div class="box-body">
+            <div class="row">
+                <div class="col-md-4">
+                    <p>Objects count <strong>(movies count)</strong></p>
+                    <p>@Model.ConfigurationAndStatistics.ObjectsCount</p>
+                    <p>Attributes count <strong>(categories count)</strong></p>
+                    <p>@Model.ConfigurationAndStatistics.AttributesCount</p>
+                </div>
+                <div class="col-md-4">
+                    <p>Formal concepts count</p>
+                    <p>@Model.ConfigurationAndStatistics.ConceptsCount</p>
+                    <p>Lattice height</p>
+                    <p>@Model.ConfigurationAndStatistics.LatticeHeight</p>
+                </div>
+                @if (!Model.ConfigurationAndStatistics.LatticeCalculationTime.Equals(new DateTime(1, 1, 1, 0, 0, 0)))
+                {
+                    <div class="text-center">
+                        <span style="font-size: 100px;" class="fa fa-check-circle text-green"></span>
+                        <p><small>@Model.ConfigurationAndStatistics.LatticeCalculationTime</small></p>
+                    </div>
+                }
+                else
+                {
+                    <div class="text-center text-red">
+                        <span style="font-size: 100px;" class="fa fa-times-circle"></span>
+                        <p><bold>Lattice not callculated</bold></p>
+                    </div>
+                }
+            </div>
+        </div>
+</div>
+
+<div class="box box-solid box-primary">
+    <form asp-controller="Home" asp-action="Neo4jUpdate" method="post">
+        <div class="box-header with-border">
+            <h3 class="box-title">Neo4j configuration</h3>
+        </div>
+        <div class="box-body">
+            <div class="form-group">
+                @Html.LabelFor(m => m.ConfigurationAndStatistics.Neo4jConnectionString)
+                @Html.TextBox("Neo4jConnectionString", Model.ConfigurationAndStatistics.Neo4jConnectionString, new { @class = "form-control" })
+            </div>
+            <div class="form-group">
+                @Html.LabelFor(m => m.ConfigurationAndStatistics.Neo4jUsername)
+                @Html.TextBox("Neo4jUsername", Model.ConfigurationAndStatistics.Neo4jUsername, new { @class = "form-control" })
+            </div>
+            <div class="form-group">
+                @Html.LabelFor(m => m.ConfigurationAndStatistics.Neo4jPass)
+                @Html.TextBox("Neo4jPass", Model.ConfigurationAndStatistics.Neo4jPass, new { @type = "password", @class = "form-control" })
+            </div>
+        </div>
+        <div class="box-footer">
+            <button type="submit" class="btn btn-primary btn-sm">Save</button>
+        </div>
+    </form>
+</div>

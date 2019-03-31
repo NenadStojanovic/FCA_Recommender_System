@@ -35,13 +35,20 @@ namespace Neo4jFCA
 
         public void ClearDatabase()
         {
-            CypherQuery query = new CypherQuery("MATCH ()-[r]-() DELETE r", null, CypherResultMode.Set);
+            //var rawClient = (IRawGraphClient)client;
+            client.Cypher
+                .Match("()-[r]-()")
+                .Delete("r")
+                .ExecuteWithoutResults();
+            //var query = new CypherQuery("MATCH ()-[r]-() DELETE r", null, CypherResultMode.Set);
+            //rawClient.ExecuteCypher(query);
 
-            ((IRawGraphClient)client).ExecuteCypher(query);
-
-            CypherQuery query2 = new CypherQuery("MATCH (n) DELETE n", null, CypherResultMode.Set);
-
-            ((IRawGraphClient)client).ExecuteCypher(query2);
+            //var query2 = new CypherQuery("MATCH (n) DELETE n", null, CypherResultMode.Set);
+            //rawClient.ExecuteCypher(query2);
+            client.Cypher
+                .Match("(n)")
+                .Delete("n")
+                .ExecuteWithoutResults();
         }
 
         public void ImportFCALattice(ConceptLattice lattice)

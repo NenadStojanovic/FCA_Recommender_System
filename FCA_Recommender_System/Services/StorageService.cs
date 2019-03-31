@@ -11,6 +11,19 @@ namespace FCA_Recommender_System.Services
     {
         public ApplicationDbContext dbContext;
 
+        private ConfigurationAndStatistics DefaultConfiguration
+        {
+            get
+            {
+                return new ConfigurationAndStatistics
+                {
+                    Neo4jConnectionString = "http://localhost:11002/db/data",
+                    Neo4jUsername = "neo4j",
+                    Neo4jPass = "root",
+                };
+            }
+        }
+
         public DBStorageService(ApplicationDbContext dbContext)
         {
             this.dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
@@ -54,6 +67,10 @@ namespace FCA_Recommender_System.Services
             dbContext.SaveChanges();
         }
 
+        public IEnumerable<MovieCategory> GetAllMovieCategories()
+        {
+            return dbContext.MovieCategories.ToList();
+        }
         public IEnumerable<Category> GetMovieCategories(int movieId)
         {
             var movieCategoryIds = dbContext.MovieCategories.Where(mc => mc.MovieId == movieId).Select(mc => mc.CategoryId).Distinct();
@@ -71,6 +88,21 @@ namespace FCA_Recommender_System.Services
             dbContext.SaveChanges();
         }
 
-
+        public ConfigurationAndStatistics GetConfiguration()
+        {
+            var configuration = dbContext.ConfigurationAndStatistics.FirstOrDefault();
+            if(configuration == null)
+            {
+                configuration = DefaultConfiguration;
+                dbContext.ConfigurationAndStatistics.Add(configuration);
+                dbContext.SaveChanges();
+            }
+            return configuration;
+        }
+        public void UpdateConfiguration(ConfigurationAndStatistics configuration)
+        {
+            dbContext.ConfigurationAndStatistics.Update(configuration);
+            dbContext.SaveChanges();
+        }
     }
 }

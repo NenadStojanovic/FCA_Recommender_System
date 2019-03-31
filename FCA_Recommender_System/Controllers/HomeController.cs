@@ -11,6 +11,12 @@ using RecommenderEngine.Util;
 using FCA_Recommender_System.Services;
 using FCA_Recommender_System.Data;
 using StorageService.Models;
+using FCAA.FormalConceptAlgorithms;
+using FCAA.Data;
+using Object = FCAA.Data.Object;
+using Attribute = FCAA.Data.Attribute;
+using FCAA.Data.Lattice;
+using Neo4jFCA;
 
 namespace FCA_Recommender_System.Controllers
 {
@@ -41,6 +47,12 @@ namespace FCA_Recommender_System.Controllers
 
             return View(vmodel);
         }
+        public IActionResult ControlPanel()
+        {
+            var model = new ControlPanelViewModel();
+            model.ConfigurationAndStatistics = new ConfigurationAndStatistics();
+            return View(model);
+        }
 
         public IActionResult About()
         {
@@ -54,12 +66,6 @@ namespace FCA_Recommender_System.Controllers
             ViewData["Message"] = "Your contact page.";
 
             return View();
-        }
-
-        public IActionResult ControlPanel()
-        {
-            var model = new ControlPanelViewModel();
-            return View(model);
         }
 
         public IActionResult Error()
@@ -113,15 +119,15 @@ namespace FCA_Recommender_System.Controllers
                     Director = m.Director
                 }).ToList();
             StorageService.AddMovies(movies);
-            
+
 
             // movie categories
             var movieCategories = new List<MovieCategory>();
-            foreach(var movie in movies)
+            foreach (var movie in movies)
             {
                 var _movieCategories = res.Where(m => m.Name == movie.Name).SelectMany(m => m.Categories).Select(c => c.Replace("http://dbpedia.org/resource/Category:", ""));
                 var __movieCategories = categories.Where(c => _movieCategories.Any(_c => _c == c.Title)).ToList();
-                foreach(var __movieCategory in __movieCategories)
+                foreach (var __movieCategory in __movieCategories)
                 {
                     var movieCategory = new MovieCategory
                     {
@@ -132,8 +138,80 @@ namespace FCA_Recommender_System.Controllers
                 }
             }
             StorageService.AddMovieCategories(movieCategories);
-            
+
+            // Callculating lattice
+            var lattice = CallculateLattice();
+
+            var configuration = StorageService.GetConfiguration();
+            configuration.LatticeCalculationTime = DateTime.Now;
+            configuration.LatticeHeight = lattice.Height;
+            configuration.ObjectsCount = lattice.FormalContext.ObjectsSet.Count();
+            configuration.AttributesCount = lattice.FormalContext.AttributesSet.Count();
+            configuration.ConceptsCount = lattice.FormalConcepts.Count();
+            StorageService.UpdateConfiguration(configuration);
+
+            // storing to neo4j db
+            StoreLatticeInNeo4jDb(lattice, configuration);
+
             return RedirectToAction("Index");
+        }
+
+        public IActionResult Neo4jUpdate(ConfigurationAndStatistics configuration)
+        {
+            StorageService.UpdateConfiguration(configuration);
+            return RedirectToAction("ControlPanel");
+        }
+
+        private ConceptLattice CallculateLattice()
+        {
+            var movies = StorageService.GetAllMovies().ToList();
+            var categories = StorageService.GetAllCategories().ToList();
+            var movieCategories = StorageService.GetAllMovieCategories().ToList();
+
+            var _movies = new Dictionary<int, string>();
+            movies.ForEach(m => _movies[m.ID] = m.Name);
+            var _categories = new Dictionary<int, string>();
+            categories.ForEach(c => _categories[c.ID] = c.Title);
+
+            var objects_d = new Dictionary<string, Object>();
+            var attributes_d = new Dictionary<string, Attribute>();
+
+            var objects = movies.Select(m => new Object(m.Name)).ToList();
+            objects.ForEach(o => objects_d[o.Name] = o);
+            var attributes = categories.Select(c => new Attribute(c.Title)).ToList();
+            attributes.ForEach(a => attributes_d[a.Name] = a);
+
+            var objectsAttributes = new Dictionary<Object, HashSet<Attribute>>();
+            objects.ForEach(o => objectsAttributes[o] = new HashSet<Attribute>());
+            var attributesObjects = new Dictionary<Attribute, HashSet<Object>>();
+            attributes.ForEach(a => attributesObjects[a] = new HashSet<Object>());
+            foreach (var movieCategory in movieCategories)
+            {
+                var movie = _movies[movieCategory.MovieId];
+                var _object = objects_d[movie];
+
+                var category = _categories[movieCategory.CategoryId];
+                var _attribute = attributes_d[category];
+
+                var objectAttributes = objectsAttributes[_object];
+                objectAttributes.Add(_attribute);
+
+                var attributeObjects = attributesObjects[_attribute];
+                attributeObjects.Add(_object);
+            }
+
+            var formalContext = new FormalContext(objects, attributes, objectsAttributes, attributesObjects);
+            var nextClousure = new NextClosureAlgorithm(formalContext);
+            var formalConcepts = nextClousure.FormalConcepts();
+            var lattice = new ConceptLattice(formalConcepts, formalContext);
+            return lattice;
+        }
+
+        private void StoreLatticeInNeo4jDb(ConceptLattice lattice, ConfigurationAndStatistics configuration)
+        {
+            var neo4jdataProvider = new Neo4jDataProvider(configuration.Neo4jConnectionString, configuration.Neo4jUsername, configuration.Neo4jPass);
+            neo4jdataProvider.ClearDatabase();
+            neo4jdataProvider.ImportFCALatticeLikeCSV(lattice);
         }
     }
 }
