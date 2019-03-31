@@ -29,11 +29,11 @@ namespace FCA_Recommender_System.Data
             builder.Entity<MovieCategory>()
             .HasKey(x => new { x.MovieId, x.CategoryId });
             builder.Entity<MovieCategory>()
-                 .HasOne(x => x.Movie)
+                 .HasOne(x => x.Category)
                  .WithMany(a => a.MovieCategories)
                  .HasForeignKey(x => x.CategoryId);
             builder.Entity<MovieCategory>()
-                 .HasOne(x => x.Category)
+                 .HasOne(x => x.Movie)
                  .WithMany(a => a.MovieCategories)
                  .HasForeignKey(x => x.MovieId);
             // Customize the ASP.NET Identity model and override the defaults if needed.

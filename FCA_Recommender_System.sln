@@ -7,9 +7,13 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FCA_Recommender_System", "F
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "StorageService", "StorageService\StorageService.csproj", "{048F0A7A-C5F4-448F-9167-58511C0BB80C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SPARQLConnector", "SPARQLConnector\SPARQLConnector.csproj", "{78F1FC65-D5C5-4E4F-9503-7495BF392652}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SPARQLConnector", "SPARQLConnector\SPARQLConnector.csproj", "{78F1FC65-D5C5-4E4F-9503-7495BF392652}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RecommenderEngine", "RecommenderEngine\RecommenderEngine.csproj", "{3E0EDD00-2A51-40A2-87BE-333CC2402935}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RecommenderEngine", "RecommenderEngine\RecommenderEngine.csproj", "{3E0EDD00-2A51-40A2-87BE-333CC2402935}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FCAA", "FCAA\FCAA.csproj", "{737176A7-02C4-484B-8E59-37C1B35EFC1B}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Neo4jFCA", "Neo4jFCA\Neo4jFCA.csproj", "{986C9EB6-D909-484B-BC00-47B435A17ADA}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -51,6 +55,22 @@ Global
 		{3E0EDD00-2A51-40A2-87BE-333CC2402935}.Release|Any CPU.Build.0 = Release|Any CPU
 		{3E0EDD00-2A51-40A2-87BE-333CC2402935}.Release|x86.ActiveCfg = Release|Any CPU
 		{3E0EDD00-2A51-40A2-87BE-333CC2402935}.Release|x86.Build.0 = Release|Any CPU
+		{737176A7-02C4-484B-8E59-37C1B35EFC1B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{737176A7-02C4-484B-8E59-37C1B35EFC1B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{737176A7-02C4-484B-8E59-37C1B35EFC1B}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{737176A7-02C4-484B-8E59-37C1B35EFC1B}.Debug|x86.Build.0 = Debug|Any CPU
+		{737176A7-02C4-484B-8E59-37C1B35EFC1B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{737176A7-02C4-484B-8E59-37C1B35EFC1B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{737176A7-02C4-484B-8E59-37C1B35EFC1B}.Release|x86.ActiveCfg = Release|Any CPU
+		{737176A7-02C4-484B-8E59-37C1B35EFC1B}.Release|x86.Build.0 = Release|Any CPU
+		{986C9EB6-D909-484B-BC00-47B435A17ADA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{986C9EB6-D909-484B-BC00-47B435A17ADA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{986C9EB6-D909-484B-BC00-47B435A17ADA}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{986C9EB6-D909-484B-BC00-47B435A17ADA}.Debug|x86.Build.0 = Debug|Any CPU
+		{986C9EB6-D909-484B-BC00-47B435A17ADA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{986C9EB6-D909-484B-BC00-47B435A17ADA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{986C9EB6-D909-484B-BC00-47B435A17ADA}.Release|x86.ActiveCfg = Release|Any CPU
+		{986C9EB6-D909-484B-BC00-47B435A17ADA}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

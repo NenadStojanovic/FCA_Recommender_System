@@ -11,7 +11,7 @@ namespace StorageService.Models
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         [Key]
         public int ID { get; set; }
-        public int Title { get; set; }
+        public string Title { get; set; }
         public virtual ICollection<MovieCategory> MovieCategories { get; set; }
 
         public Category()
