@@ -50,7 +50,7 @@ namespace FCA_Recommender_System.Controllers
         public IActionResult ControlPanel()
         {
             var model = new ControlPanelViewModel();
-            model.ConfigurationAndStatistics = new ConfigurationAndStatistics();
+            model.ConfigurationAndStatistics = StorageService.GetConfiguration();
             return View(model);
         }
 
