@@ -1,6 +1,7 @@
 ﻿@model HomeIndexViewModel
 @{
     ViewData["Title"] = "Home Page";
+    Layout = "~/Views/Shared/_AdminLTELayout.cshtml";
 }
 <h1>
     <a href="/Home/ControlPanel">Control Panel</a>
@@ -114,30 +115,32 @@
 <div class="row">
     <div class="col-md-6">
         <h2>Movies</h2>
-        <table class="table table-bordered table-striped">
-            <thead>
-                <tr>
-                    <td>Name</td>
-                    <td>Director</td>
-                    @*<td>Data link</td>*@
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var movie in Model.Movies)
-                {
+        <div class="table-responsive">
+            <table class="table table-bordered table-striped table-hover">
+                <thead>
                     <tr>
-                        <td>@movie.Name</td>
-                        <td>@movie.Director</td>
-                        @*<td>@movie.DataLink</td>*@
+                        <td>Name</td>
+                        <td>Director</td>
+                        @*<td>Data link</td>*@
                     </tr>
-                }
-            </tbody>
-        </table>
+                </thead>
+                <tbody>
+                    @foreach (var movie in Model.Movies)
+                    {
+                        <tr>
+                            <td><a href="@Url.Action("Movie", new { id = movie.ID })">@movie.Name</a></td>
+                            <td>@movie.Director</td>
+                            @*<td>@movie.DataLink</td>*@
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
     </div>
     <div class="col-md-6">
         <h2>Categories</h2>
         <div class="table-responsive">
-            <table class="table table-bordered table-striped">
+            <table class="table table-bordered table-striped table-hover">
                 <thead>
                     <tr>
                         <td>Name</td>

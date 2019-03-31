@@ -16,6 +16,14 @@ namespace FCA_Recommender_System.Services
             this.dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
         }
 
+        public IEnumerable<Category> GetAllCategories()
+        {
+            return dbContext.Categories.ToList();
+        }
+        public Category GetCategory(int id)
+        {
+            return dbContext.Categories.Find(id);
+        }
         public void AddCategories(IEnumerable<Category> categories)
         {
             dbContext.Categories.AddRange(categories);
@@ -25,6 +33,15 @@ namespace FCA_Recommender_System.Services
         {
             dbContext.Categories.RemoveRange(dbContext.Categories);
             dbContext.SaveChanges();
+        }
+
+        public IEnumerable<Movie> GetAllMovies()
+        {
+            return dbContext.Movies.ToList();
+        }
+        public Movie GetMovie(int id)
+        {
+            return dbContext.Movies.Find(id);
         }
         public void AddMovies(IEnumerable<Movie> movies)
         {
@@ -36,6 +53,13 @@ namespace FCA_Recommender_System.Services
             dbContext.Movies.RemoveRange(dbContext.Movies);
             dbContext.SaveChanges();
         }
+
+        public IEnumerable<Category> GetMovieCategories(int movieId)
+        {
+            var movieCategoryIds = dbContext.MovieCategories.Where(mc => mc.MovieId == movieId).Select(mc => mc.CategoryId).Distinct();
+            return dbContext.Categories.Where(c => movieCategoryIds.Contains(c.ID)).ToList();
+        }
+
         public void AddMovieCategories(IEnumerable<MovieCategory> movieCategories)
         {
             dbContext.MovieCategories.AddRange(movieCategories);
@@ -47,14 +71,6 @@ namespace FCA_Recommender_System.Services
             dbContext.SaveChanges();
         }
 
-        public IEnumerable<Movie> GetAllMovies()
-        {
-            return dbContext.Movies.ToList();
-        }
 
-        public IEnumerable<Category> GetAllCategories()
-        {
-            return dbContext.Categories.ToList();
-        }
     }
 }

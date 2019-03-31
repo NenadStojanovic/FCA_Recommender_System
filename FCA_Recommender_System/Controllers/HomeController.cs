@@ -33,6 +33,15 @@ namespace FCA_Recommender_System.Controllers
             return View(vmodel);
         }
 
+        public IActionResult Movie(int id)
+        {
+            var vmodel = new MovieViewModel();
+            vmodel.Movie = StorageService.GetMovie(id);
+            vmodel.Categories = StorageService.GetMovieCategories(id).ToList();
+
+            return View(vmodel);
+        }
+
         public IActionResult About()
         {
             ViewData["Message"] = "Your application description page.";
