@@ -156,6 +156,25 @@ namespace FCA_Recommender_System.Controllers
             return RedirectToAction("Index");
         }
 
+        [HttpPost]
+        public IActionResult RegenerateLattice()
+        {
+            // Callculating lattice
+            var lattice = CallculateLattice();
+
+            var configuration = StorageService.GetConfiguration();
+            configuration.LatticeCalculationTime = DateTime.Now;
+            configuration.LatticeHeight = lattice.Height;
+            configuration.ObjectsCount = lattice.FormalContext.ObjectsSet.Count();
+            configuration.AttributesCount = lattice.FormalContext.AttributesSet.Count();
+            configuration.ConceptsCount = lattice.FormalConcepts.Count();
+            StorageService.UpdateConfiguration(configuration);
+
+            // storing to neo4j db
+            StoreLatticeInNeo4jDb(lattice, configuration);
+            return RedirectToAction("ControlPanel");
+        }
+
         public IActionResult Neo4jUpdate(ConfigurationAndStatistics configuration)
         {
             StorageService.UpdateConfiguration(configuration);

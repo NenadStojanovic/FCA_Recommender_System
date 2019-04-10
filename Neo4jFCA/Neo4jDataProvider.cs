@@ -148,15 +148,20 @@ namespace Neo4jFCA
         private string ObjectsCSV(LatticeFormalConcept node)
         {
             var objectsAggregate = String.Empty;
+            // preprocesing object names
+            var objectNames = node.Objects.Select(o => o.Name.Replace(",", "~").Replace(" ", "_")).ToList();
+            //objectNames.ForEach(o => o = o.Replace(",", "~").Replace(" ", "_"));
             if (node.Objects.Any())
-                objectsAggregate = node.Objects.Select(o => o.Name).Aggregate((i, j) => i + " " + j);
+                objectsAggregate = objectNames.Aggregate((i, j) => i + " " + j);
             return objectsAggregate;
         }
         private string AttributesCSV(LatticeFormalConcept node)
         {
             var attributesAggregate = String.Empty;
+            var attributeNames = node.Attributes.Select(a => a.Name.Replace(",", "~").Replace(" ", "_")).ToList();
+            //attributeNames.ForEach(a => a = a.Replace(",", "~").Replace(" ", "_"));
             if (node.Attributes.Any())
-                attributesAggregate = node.Attributes.Select(a => a.Name).Aggregate((i, j) => i + " " + j);
+                attributesAggregate = attributeNames.Aggregate((i, j) => i + " " + j);
             return attributesAggregate;
         }
 
