@@ -176,15 +176,15 @@ namespace Neo4jFCA
 
         public IEnumerable<string> SearchForObjects(string _object, IEnumerable<string> attributes)
         {
-            var res = client.Cypher
+            /*var res = client.Cypher
                  .Match("(n:Concept)")
                  .Where("n.attributes CONTAINS " + "'" + CSVNormalize(attributes) + "'")
                  .Return(n => n.As<Neo4JNode>().objects)
                  .OrderByDescending("n.level")
                  .Limit(1)
                  .Results;
-            var objectNames = res.Select(o => CSVDenormalize(o)).ToList();
-            return objectNames;
+            var objectNames = res.Select(o => CSVDenormalize(o)).ToList();*/
+            return null;
         }
         public IEnumerable<string> SearchForObjects(IEnumerable<string> attributes)
         {
