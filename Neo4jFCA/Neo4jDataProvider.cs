@@ -5,15 +5,13 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Neo4jFCA
 {
     public class Neo4jDataProvider
     {
         private GraphClient client;
-        private Uri db_adres ;
+        private Uri db_adres;
         private string user_name;
         private string password;
 
@@ -145,12 +143,11 @@ namespace Neo4jFCA
                 .ExecuteWithoutResults();
             edgesfileInfo.Delete();
         }
+
         private string ObjectsCSV(LatticeFormalConcept node)
         {
             var objectsAggregate = String.Empty;
-            // preprocesing object names
-            var objectNames = node.Objects.Select(o => o.Name.Replace(",", "~").Replace(" ", "_")).ToList();
-            //objectNames.ForEach(o => o = o.Replace(",", "~").Replace(" ", "_"));
+            var objectNames = node.Objects.Select(o => CSVNormalize(o.Name)).ToList();
             if (node.Objects.Any())
                 objectsAggregate = objectNames.Aggregate((i, j) => i + " " + j);
             return objectsAggregate;
@@ -158,12 +155,12 @@ namespace Neo4jFCA
         private string AttributesCSV(LatticeFormalConcept node)
         {
             var attributesAggregate = String.Empty;
-            var attributeNames = node.Attributes.Select(a => a.Name.Replace(",", "~").Replace(" ", "_")).ToList();
-            //attributeNames.ForEach(a => a = a.Replace(",", "~").Replace(" ", "_"));
+            var attributeNames = node.Attributes.Select(a => CSVNormalize(a.Name)).ToList();
             if (node.Attributes.Any())
                 attributesAggregate = attributeNames.Aggregate((i, j) => i + " " + j);
             return attributesAggregate;
         }
+
 
         public string SearchForObjects(string attribute)
         {
@@ -177,6 +174,48 @@ namespace Neo4jFCA
             return res.FirstOrDefault();
         }
 
+        public IEnumerable<string> SearchForObjects(string _object, IEnumerable<string> attributes)
+        {
+            var res = client.Cypher
+                 .Match("(n:Concept)")
+                 .Where("n.attributes CONTAINS " + "'" + CSVNormalize(attributes) + "'")
+                 .Return(n => n.As<Neo4JNode>().objects)
+                 .OrderByDescending("n.level")
+                 .Limit(1)
+                 .Results;
+            var objectNames = res.Select(o => CSVDenormalize(o)).ToList();
+            return objectNames;
+        }
+        public IEnumerable<string> SearchForObjects(IEnumerable<string> attributes)
+        {
+            var query = client.Cypher
+                     .Match("(n:Concept)")
+                     .Where("n.attributes CONTAINS " + "'" + attributes.FirstOrDefault() + "'");
+            foreach (var attribute in attributes)
+            {
+                query = query.AndWhere("n.attributes =~ " + "'.*" + attribute.Replace("'", ".") + ".*'");
+            }
+            var res = query
+                 .Return(n => n.As<Neo4JNode>().objects)
+                 .OrderByDescending("n.level")
+                 .Limit(10)
+                 .Results;
+            return res;
+        }
+
+        #region Helpers
+
+        private string CSVNormalize(string entry)
+        {
+            var normalized = entry.Replace(",", "~").Replace(" ", "_").Replace("'", "+");
+            return normalized;
+        }
+        private string CSVDenormalize(string entry)
+        {
+            var denormalized = entry.Replace("~", ",").Replace("_", " ").Replace("+", "'");
+            return denormalized;
+        }
+
         //pomocna klasa za deserijalizaciju rezultata iz upita za pretragu
         private class Neo4JNode
         {
@@ -185,5 +224,6 @@ namespace Neo4jFCA
             public string attributes { get; set; }
             public string objects { get; set; }
         }
+        #endregion
     }
 }

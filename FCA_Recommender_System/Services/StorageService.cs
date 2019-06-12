@@ -67,6 +67,35 @@ namespace FCA_Recommender_System.Services
             dbContext.SaveChanges();
         }
 
+        public void LikeMovie(string userId, int movie, bool like)
+        {
+            if(like)
+            {
+                if(!dbContext.LikedMovies.Any(lm => lm.UserId == userId && lm.MovieId == movie))
+                    dbContext.LikedMovies.Add(new LikedMovies { UserId = userId, MovieId = movie });
+            }
+            else
+            {
+                var likedMovie = dbContext.LikedMovies.FirstOrDefault(lm => lm.UserId == userId && lm.MovieId == movie);
+                if(likedMovie != null)
+                    dbContext.LikedMovies.Remove(likedMovie);
+            }
+            dbContext.SaveChanges();
+
+        }
+        public bool IsLiked(string userId, int movie)
+        {
+            return dbContext.LikedMovies.Any(lm => lm.UserId == userId && lm.MovieId == movie);
+        }
+        public int MovieLikes(int movie)
+        {
+            return dbContext.LikedMovies.Count(lm => lm.MovieId == movie);
+        }
+        public IEnumerable<Movie> LikedMovies(string userId)
+        {
+            return dbContext.LikedMovies.Where(lm => lm.UserId == userId).Select(lm => lm.Movie).ToList();
+        }
+
         public IEnumerable<MovieCategory> GetAllMovieCategories()
         {
             return dbContext.MovieCategories.ToList();

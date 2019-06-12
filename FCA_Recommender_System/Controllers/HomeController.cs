@@ -17,6 +17,8 @@ using Object = FCAA.Data.Object;
 using Attribute = FCAA.Data.Attribute;
 using FCAA.Data.Lattice;
 using Neo4jFCA;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 
 namespace FCA_Recommender_System.Controllers
 {
@@ -24,11 +26,18 @@ namespace FCA_Recommender_System.Controllers
     {
         InputFileManager InputFileManager = new InputFileManager();
         private readonly IStorageService StorageService;
+        private readonly UserManager<ApplicationUser> userManager;
+        private readonly Neo4jDataProvider neo4JDataProvider;
 
-        public HomeController(ApplicationDbContext applicationDbContext)
+        public HomeController(UserManager<ApplicationUser> userManager , ApplicationDbContext applicationDbContext)
         {
             StorageService = new DBStorageService(applicationDbContext);
+            this.userManager = userManager;
+            var configuration = StorageService.GetConfiguration();
+            neo4JDataProvider = new Neo4jDataProvider(configuration.Neo4jConnectionString, configuration.Neo4jUsername, configuration.Neo4jPass);
         }
+
+        public string UserId => userManager.GetUserId(User);
 
         public IActionResult Index()
         {
@@ -44,9 +53,25 @@ namespace FCA_Recommender_System.Controllers
             var vmodel = new MovieViewModel();
             vmodel.Movie = StorageService.GetMovie(id);
             vmodel.Categories = StorageService.GetMovieCategories(id).ToList();
-
+            vmodel.Likes = StorageService.MovieLikes(id);
+            if (User.Identity.IsAuthenticated)
+            {
+                vmodel.Liked = StorageService.IsLiked(UserId, id);
+            }
+            GetRecomendedMovies(id);
+            vmodel.RecomendedMovies = StorageService.GetAllMovies().Take(10).ToList();
             return View(vmodel);
         }
+
+        [Authorize]
+        [HttpPost]
+        public string LikeMovie(int id, bool like)
+        {
+            StorageService.LikeMovie(UserId, id, like);
+            return "{}";
+        }
+
+        [Authorize]
         public IActionResult ControlPanel()
         {
             var model = new ControlPanelViewModel();
@@ -78,66 +103,69 @@ namespace FCA_Recommender_System.Controllers
         {
             if (file == null || file.Length == 0)
                 return Content("file not selected");
-
-            var path = Path.Combine(
-                        Directory.GetCurrentDirectory(), "wwwroot",
-                        Guid.NewGuid().ToString() + ".tsv");
-
-            using (var stream = new FileStream(path, FileMode.Create))
+            var readFromDBPedia = false;
+            if (readFromDBPedia)
             {
-                file.CopyTo(stream);
+                var path = Path.Combine(
+                          Directory.GetCurrentDirectory(), "wwwroot",
+                          Guid.NewGuid().ToString() + ".tsv");
 
-            }
-            var res = InputFileManager.ParseFile(path).Take(20).ToList();
-            FileInfo fileInfo = new FileInfo(path);
-            fileInfo.Delete();
-            InputFileManager.GetMoviesData(res);
-
-            // clear
-            StorageService.RemoveAllMovieCategories();
-            StorageService.RemoveAllCategories();
-            StorageService.RemoveAllMovies();
-
-            // categories
-            var categories = res
-                .SelectMany(m => m.Categories).Distinct()
-                .Select(c => c.Replace("http://dbpedia.org/resource/Category:", ""))
-                .Select(c => new Category
+                using (var stream = new FileStream(path, FileMode.Create))
                 {
-                    Title = c
-                }).ToList();
-            StorageService.AddCategories(categories);
+                    file.CopyTo(stream);
 
-            // movies 
-            var movies = res
-                .GroupBy(m => m.Name).Select(g => g.First())
-                .Select(m => new Movie
-                {
-                    Name = m.Name,
-                    Abstract = m.Abstract,
-                    DataLink = m.DataLink,
-                    Director = m.Director
-                }).ToList();
-            StorageService.AddMovies(movies);
-
-
-            // movie categories
-            var movieCategories = new List<MovieCategory>();
-            foreach (var movie in movies)
-            {
-                var _movieCategories = res.Where(m => m.Name == movie.Name).SelectMany(m => m.Categories).Select(c => c.Replace("http://dbpedia.org/resource/Category:", ""));
-                var __movieCategories = categories.Where(c => _movieCategories.Any(_c => _c == c.Title)).ToList();
-                foreach (var __movieCategory in __movieCategories)
-                {
-                    var movieCategory = new MovieCategory
-                    {
-                        MovieId = movie.ID,
-                        CategoryId = __movieCategory.ID
-                    };
-                    movieCategories.Add(movieCategory);
                 }
+                var res = InputFileManager.ParseFile(path).ToList();
+                FileInfo fileInfo = new FileInfo(path);
+                fileInfo.Delete();
+                InputFileManager.GetMoviesData(res);
+
+                // clear
+                StorageService.RemoveAllMovieCategories();
+                StorageService.RemoveAllCategories();
+                StorageService.RemoveAllMovies();
+
+                // categories
+                var categories = res
+                    .SelectMany(m => m.Categories).Distinct()
+                    .Select(c => c.Replace("http://dbpedia.org/resource/Category:", ""))
+                    .Select(c => new Category
+                    {
+                        Title = c
+                    }).ToList();
+                StorageService.AddCategories(categories);
+
+                // movies 
+                var movies = res
+                    .GroupBy(m => m.Name).Select(g => g.First())
+                    .Select(m => new Movie
+                    {
+                        Name = m.Name,
+                        Abstract = m.Abstract,
+                        DataLink = m.DataLink,
+                        Director = m.Director
+                    }).ToList();
+                StorageService.AddMovies(movies);
+
+
+                // movie categories
+                var movieCategories = new List<MovieCategory>();
+                foreach (var movie in movies)
+                {
+                    var _movieCategories = res.Where(m => m.Name == movie.Name).SelectMany(m => m.Categories).Select(c => c.Replace("http://dbpedia.org/resource/Category:", ""));
+                    var __movieCategories = categories.Where(c => _movieCategories.Any(_c => _c == c.Title)).ToList();
+                    foreach (var __movieCategory in __movieCategories)
+                    {
+                        var movieCategory = new MovieCategory
+                        {
+                            MovieId = movie.ID,
+                            CategoryId = __movieCategory.ID
+                        };
+                        movieCategories.Add(movieCategory);
+                    }
+                }
+                StorageService.AddMovieCategories(movieCategories);
             }
-            StorageService.AddMovieCategories(movieCategories);
 
             // Callculating lattice
             var lattice = CallculateLattice();
@@ -151,7 +179,7 @@ namespace FCA_Recommender_System.Controllers
             StorageService.UpdateConfiguration(configuration);
 
             // storing to neo4j db
-            StoreLatticeInNeo4jDb(lattice, configuration);
+            StoreLatticeInNeo4jDb(lattice);
 
             return RedirectToAction("Index");
         }
@@ -171,7 +199,7 @@ namespace FCA_Recommender_System.Controllers
             StorageService.UpdateConfiguration(configuration);
 
             // storing to neo4j db
-            StoreLatticeInNeo4jDb(lattice, configuration);
+            StoreLatticeInNeo4jDb(lattice);
             return RedirectToAction("ControlPanel");
         }
 
@@ -183,7 +211,7 @@ namespace FCA_Recommender_System.Controllers
 
         private ConceptLattice CallculateLattice()
         {
-            var movies = StorageService.GetAllMovies().ToList();
+            var movies = StorageService.GetAllMovies().Take(100).ToList(); // taking 100
             var categories = StorageService.GetAllCategories().ToList();
             var movieCategories = StorageService.GetAllMovieCategories().ToList();
 
@@ -206,7 +234,10 @@ namespace FCA_Recommender_System.Controllers
             attributes.ForEach(a => attributesObjects[a] = new HashSet<Object>());
             foreach (var movieCategory in movieCategories)
             {
-                var movie = _movies[movieCategory.MovieId];
+                string movie = null;
+                _movies.TryGetValue(movieCategory.MovieId, out movie);
+                if (movie == null)
+                    continue;
                 var _object = objects_d[movie];
 
                 var category = _categories[movieCategory.CategoryId];
@@ -226,11 +257,20 @@ namespace FCA_Recommender_System.Controllers
             return lattice;
         }
 
-        private void StoreLatticeInNeo4jDb(ConceptLattice lattice, ConfigurationAndStatistics configuration)
+        private void StoreLatticeInNeo4jDb(ConceptLattice lattice)
         {
-            var neo4jdataProvider = new Neo4jDataProvider(configuration.Neo4jConnectionString, configuration.Neo4jUsername, configuration.Neo4jPass);
-            neo4jdataProvider.ClearDatabase();
-            neo4jdataProvider.ImportFCALatticeLikeCSV(lattice);
+            neo4JDataProvider.ClearDatabase();
+            neo4JDataProvider.ImportFCALatticeLikeCSV(lattice);
+        }
+
+        private IList<Movie> GetRecomendedMovies(int movieId)
+        {
+            var userLikedMovies = StorageService.LikedMovies(UserId);
+            var movieCategories = StorageService.GetMovieCategories(movieId);
+            var attr = movieCategories.FirstOrDefault();
+            var configuration = StorageService.GetConfiguration();
+            var recommended_s = neo4JDataProvider.SearchForObjects(movieCategories.Select(c => c.Title).Take(2));
+            return null;
         }
     }
 }

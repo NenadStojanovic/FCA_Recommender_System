@@ -12,6 +12,11 @@ namespace FCA_Recommender_System.Services
         void AddMovies(IEnumerable<Movie> movies);
         void RemoveAllMovies();
 
+        void LikeMovie(string userId, int movie, bool like);
+        bool IsLiked(string userId, int movie);
+        int MovieLikes(int movie);
+        IEnumerable<Movie> LikedMovies(string userId);
+
         IEnumerable<Category> GetAllCategories();
         Category GetCategory(int id);
         void AddCategories(IEnumerable<Category> categories);
