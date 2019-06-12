@@ -174,18 +174,51 @@ namespace Neo4jFCA
             return res.FirstOrDefault();
         }
 
-        public IEnumerable<string> SearchForObjects(string _object, IEnumerable<string> attributes)
+        public IEnumerable<NodeMatch> SearchForObjects(string _object, IEnumerable<string> attributes)
         {
-            /*var res = client.Cypher
+            ///MATCH (n:Concept) WHERE n.objects CONTAINS "Lethal_Weapon_4_(1998)" AND n.level = "1"
+            ///WITH n MATCH (n)-[r:intent]->(m) RETURN m
+            var res = client.Cypher
                  .Match("(n:Concept)")
-                 .Where("n.attributes CONTAINS " + "'" + CSVNormalize(attributes) + "'")
-                 .Return(n => n.As<Neo4JNode>().objects)
-                 .OrderByDescending("n.level")
-                 .Limit(1)
+                 .Where("n.objects CONTAINS " + "'" + CSVNormalize(_object) + "'")
+                 .AndWhere("n.level = '1'")
+                 .With("n")
+                 .Match("(n)-[r:intent]->(m)")
+                 .Return(m => m.As<Neo4JNode>())
                  .Results;
-            var objectNames = res.Select(o => CSVDenormalize(o)).ToList();*/
-            return null;
+            //return objectNames;
+            var nodeMatches = new List<NodeMatch>();
+            foreach(var node in res)
+            {
+                node.Objects = node.objects.Split(' ').Select(s => CSVDenormalize(s));
+                node.Attributes = node.attributes.Split(' ').Select(s => CSVDenormalize(s).Replace(" ", "_"));
+                var match = new NodeMatch()
+                {
+                    Matches = node.Attributes.Intersect(attributes).Count(),
+                    Node = node
+                };
+                nodeMatches.Add(match);
+            }
+            return nodeMatches;
         }
+
+        public IEnumerable<NodeMatch> SearchForObjects()
+        {
+            throw new Exception();
+        }
+
+        public class NodeMatch
+        {
+            public int Matches { get; set; }
+            public Neo4JNode Node { get; set; }
+        }
+
+        public class AttributeLikes
+        {
+            public int Likes { get; set; }
+            public string Attribute { get; set; }
+        }
+
         public IEnumerable<string> SearchForObjects(IEnumerable<string> attributes)
         {
             var query = client.Cypher
@@ -217,12 +250,14 @@ namespace Neo4jFCA
         }
 
         //pomocna klasa za deserijalizaciju rezultata iz upita za pretragu
-        private class Neo4JNode
+        public class Neo4JNode
         {
             public string id { get; set; }
             public int level { get; set; }
             public string attributes { get; set; }
             public string objects { get; set; }
+            public IEnumerable<string> Objects { get; set; }
+            public IEnumerable<string> Attributes { get; set; }
         }
         #endregion
     }

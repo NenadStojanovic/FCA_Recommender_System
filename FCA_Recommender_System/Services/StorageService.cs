@@ -1,4 +1,5 @@
 ﻿using FCA_Recommender_System.Data;
+using Microsoft.EntityFrameworkCore;
 using StorageService.Models;
 using System;
 using System.Collections.Generic;
@@ -56,6 +57,10 @@ namespace FCA_Recommender_System.Services
         {
             return dbContext.Movies.Find(id);
         }
+        public IEnumerable<Movie> GetMoviesByNames(IEnumerable<string> names)
+        {
+            return dbContext.Movies.Where(m => names.Contains(m.Name)).ToList();
+        }
         public void AddMovies(IEnumerable<Movie> movies)
         {
             dbContext.Movies.AddRange(movies);
@@ -93,7 +98,7 @@ namespace FCA_Recommender_System.Services
         }
         public IEnumerable<Movie> LikedMovies(string userId)
         {
-            return dbContext.LikedMovies.Where(lm => lm.UserId == userId).Select(lm => lm.Movie).ToList();
+            return dbContext.LikedMovies.Where(lm => lm.UserId == userId).Select(lm => lm.Movie).Include(m => m.MovieCategories).ToList();
         }
 
         public IEnumerable<MovieCategory> GetAllMovieCategories()
