@@ -9,6 +9,7 @@ namespace FCA_Recommender_System.Services
     {
         IEnumerable<Movie> GetAllMovies();
         Movie GetMovie(int id);
+        IEnumerable<Movie> GetMoviesByNames(IEnumerable<string> names);
         void AddMovies(IEnumerable<Movie> movies);
         void RemoveAllMovies();
 
