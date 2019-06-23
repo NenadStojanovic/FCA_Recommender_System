@@ -10,7 +10,10 @@ namespace FCA_Recommender_System.Services
 {
     public class DBStorageService : IStorageService
     {
-        public ApplicationDbContext dbContext;
+        public ApplicationDbContext dbContext { get; set; }
+
+        public IEnumerable<Movie> MoviesCache;
+        public IEnumerable<Category> CategoriesCache;
 
         private ConfigurationAndStatistics DefaultConfiguration
         {
@@ -32,11 +35,13 @@ namespace FCA_Recommender_System.Services
 
         public IEnumerable<Category> GetAllCategories()
         {
-            return dbContext.Categories.ToList();
+            if (CategoriesCache == null)
+                CategoriesCache = dbContext.Categories.LimitCategories(dbContext).ToList();
+            return CategoriesCache;
         }
         public Category GetCategory(int id)
         {
-            return dbContext.Categories.Find(id);
+            return dbContext.Categories.LimitCategories(dbContext).FirstOrDefault(c => c.ID == id);
         }
         public void AddCategories(IEnumerable<Category> categories)
         {
@@ -51,15 +56,17 @@ namespace FCA_Recommender_System.Services
 
         public IEnumerable<Movie> GetAllMovies()
         {
-            return dbContext.Movies.ToList();
+            if(MoviesCache == null)
+                MoviesCache = dbContext.Movies.LimitMovies().ToList();
+            return MoviesCache;
         }
         public Movie GetMovie(int id)
         {
-            return dbContext.Movies.Find(id);
+            return dbContext.Movies.LimitMovies().FirstOrDefault(m => m.ID == id);
         }
         public IEnumerable<Movie> GetMoviesByNames(IEnumerable<string> names)
         {
-            return dbContext.Movies.Where(m => names.Contains(m.Name)).ToList();
+            return dbContext.Movies.LimitMovies().Where(m => names.Contains(m.Name)).ToList();
         }
         public void AddMovies(IEnumerable<Movie> movies)
         {
@@ -74,15 +81,15 @@ namespace FCA_Recommender_System.Services
 
         public void LikeMovie(string userId, int movie, bool like)
         {
-            if(like)
+            if (like)
             {
-                if(!dbContext.LikedMovies.Any(lm => lm.UserId == userId && lm.MovieId == movie))
+                if (!dbContext.LikedMovies.Any(lm => lm.UserId == userId && lm.MovieId == movie))
                     dbContext.LikedMovies.Add(new LikedMovies { UserId = userId, MovieId = movie });
             }
             else
             {
                 var likedMovie = dbContext.LikedMovies.FirstOrDefault(lm => lm.UserId == userId && lm.MovieId == movie);
-                if(likedMovie != null)
+                if (likedMovie != null)
                     dbContext.LikedMovies.Remove(likedMovie);
             }
             dbContext.SaveChanges();
@@ -125,7 +132,7 @@ namespace FCA_Recommender_System.Services
         public ConfigurationAndStatistics GetConfiguration()
         {
             var configuration = dbContext.ConfigurationAndStatistics.FirstOrDefault();
-            if(configuration == null)
+            if (configuration == null)
             {
                 configuration = DefaultConfiguration;
                 dbContext.ConfigurationAndStatistics.Add(configuration);
@@ -137,6 +144,27 @@ namespace FCA_Recommender_System.Services
         {
             dbContext.ConfigurationAndStatistics.Update(configuration);
             dbContext.SaveChanges();
+        }
+
+
+    }
+
+    public static class StorageExtensions
+    {
+        public static IQueryable<Movie> LimitMovies(this DbSet<Movie> movies)
+        {
+            return movies
+                // movies that have categories
+                .Where(m => m.MovieCategories.Any())
+                // max 200 movies
+                .Take(500);
+        }
+
+        public static IQueryable<Category> LimitCategories(this DbSet<Category> categories, ApplicationDbContext context)
+        {
+            var movies = context.Movies.LimitMovies();
+            var _categories = context.MovieCategories.Where(mc => movies.Contains(mc.Movie)).Select(mc => mc.CategoryId).Distinct().ToList();
+            return categories.Where(c => _categories.Any(_c => c.ID == _c));
         }
     }
 }

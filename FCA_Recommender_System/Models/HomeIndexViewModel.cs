@@ -10,5 +10,6 @@ namespace FCA_Recommender_System.Models
     {
         public IList<Movie> Movies { get; set; }
         public IList<Category> Categories { get; set; }
+        public IList<Movie> Recomended { get; set; }
     }
 }
