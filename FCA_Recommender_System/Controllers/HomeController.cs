@@ -19,7 +19,6 @@ using FCAA.Data.Lattice;
 using Neo4jFCA;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
-using static Neo4jFCA.Neo4jDataProvider;
 
 namespace FCA_Recommender_System.Controllers
 {
@@ -35,7 +34,7 @@ namespace FCA_Recommender_System.Controllers
             StorageService = new DBStorageService(applicationDbContext);
             this.userManager = userManager;
             var configuration = StorageService.GetConfiguration();
-            neo4JDataProvider = new Neo4jDataProvider(configuration.Neo4jConnectionString, configuration.Neo4jUsername, configuration.Neo4jPass);
+            this.neo4JDataProvider = new Neo4jDataProvider(configuration.Neo4jConnectionString, configuration.Neo4jUsername, configuration.Neo4jPass);
         }
 
         public string UserId => userManager.GetUserId(User);
@@ -283,10 +282,10 @@ namespace FCA_Recommender_System.Controllers
 
         private IEnumerable<Movie> GetRecomendedMovies()
         {
-            var userLikedMovies = StorageService.LikedMovies(UserId);
-            var likedAttributes = userLikedMovies
-                .SelectMany(m => m.MovieCategories, (m, c) => new { m = m, mc = c })
-                .GroupBy(s => s.mc.).Select(m => new AttributeLikes { Likes = })
+            //var userLikedMovies = StorageService.LikedMovies(UserId);
+            //var likedAttributes = userLikedMovies
+            //    .SelectMany(m => m.MovieCategories, (m, c) => new { m = m, mc = c })
+            //    .GroupBy(s => s.mc.).Select(m => new AttributeLikes { Likes = })
             
 
             //var recomendedmatches = neo4JDataProvider.SearchForObjects(movie.Name, movieCategories.Select(c => c.Title));
@@ -298,7 +297,7 @@ namespace FCA_Recommender_System.Controllers
             //movienames = movienames.GroupBy(m => m).Select(g => g.First()).ToList();
             //movienames.Remove(movie.Name);
             var recomended = string.Empty;//StorageService.GetMoviesByNames(movienames);
-            return recomended;
+            return null;
         }
     }
 }
