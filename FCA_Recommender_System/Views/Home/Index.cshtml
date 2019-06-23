@@ -2,6 +2,8 @@
 @{
     ViewData["Title"] = "Home Page";
     Layout = "~/Views/Shared/_AdminLTELayout.cshtml";
+    var background = "data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%22200%22%20height%3D%22200%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20200%20200%22%20preserveAspectRatio%3D%22none%22%3E%3Cdefs%3E%3Cstyle%20type%3D%22text%2Fcss%22%3E%23holder_169d4876154%20text%20%7B%20fill%3Argba(255%2C255%2C255%2C.75)%3Bfont-weight%3Anormal%3Bfont-family%3AHelvetica%2C%20monospace%3Bfont-size%3A10pt%20%7D%20%3C%2Fstyle%3E%3C%2Fdefs%3E%3Cg%20id%3D%22holder_169d4876154%22%3E%3Crect%20width%3D%22200%22%20height%3D%22200%22%20fill%3D%22%23777%22%3E%3C%2Frect%3E%3Cg%3E%3Ctext%20x%3D%2274.4375%22%20y%3D%22104.55625%22%3E%3C%2Ftext%3E%3C%2Fg%3E%3C%2Fg%3E%3C%2Fsvg%3E";
+
 }
 @*<h1>
         <a href="/Home/ControlPanel">Control Panel</a>
@@ -15,7 +17,19 @@
     }
 </style>
 <div class="row">
-    <div class="col-md-12">
+    <div class="col-lg-12">
+        <h4>Moves recommended for you</h4>
+        <div class="col-md-12 no-padding">
+            @foreach (var recomended in Model.Recomended.Take(10))
+            {
+                <a href="@Url.Action("Movie", new { id = recomended.ID })" class="col-md-1 no-padding" style="width: 10%; height: 168px; overflow: hidden; text-overflow: ellipsis;">
+                    <img id="logo_@recomended.ID" src="@background" alt="300x300" class="img-thumbnail" style="width: 110px; height: 140px; padding: 0px 5px;" />
+                    <p style="font-size: x-small">@recomended.Name</p>
+                </a>
+            }
+        </div>
+    </div>
+    <div class="col-md-8">
         <h2>Movies</h2>
         <div class="table-responsive">
             <table  class="table table-bordered table-striped table-hover" id="moviesTable">
@@ -58,6 +72,36 @@
         </div>
     </div>*@
 </div>
+@section scripts {
+    <script>
+        var recomended = @Json.Serialize(Model.Recomended.Take(10).Select(m => new { id = m.ID, name = m.Name.Remove(m.Name.IndexOf("("))}).ToList());
+
+        for (var i = 0; i < recomended.length; i++) {
+            $.ajax({
+                index: i,
+                url: "https://api.themoviedb.org/3/search/movie",
+                data: {
+                    api_key: "bfeeff106cd2938769ad5341b42337d3",
+                    region: 'US',
+                    query: recomended[i].name,
+                    page: 1
+                },
+                method: 'GET',
+                dataType: 'jsonp',
+                start_time: new Date().getTime(),
+                success: function (response) {
+                    console.debug(response);
+                    var movies = response.results;
+                    var firstResult = movies[0];
+                    $("#logo_" + recomended[this.index].id).attr("src", "https://image.tmdb.org/t/p/w300/" + firstResult.poster_path)
+                },
+                error: function (response) {
+                    $("#logo_" + recomended[this.index].id).css("background: red;")
+                }
+            });
+        }
+    </script>
+}
 
 @section Scripts {
     <script src="~/js/Index.js"></script>

@@ -19,6 +19,8 @@ using FCAA.Data.Lattice;
 using Neo4jFCA;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
+using static Neo4jFCA.Neo4jDataProvider;
+using System.Threading;
 
 namespace FCA_Recommender_System.Controllers
 {
@@ -27,14 +29,26 @@ namespace FCA_Recommender_System.Controllers
         InputFileManager InputFileManager = new InputFileManager();
         private readonly IStorageService StorageService;
         private readonly UserManager<ApplicationUser> userManager;
-        private readonly Neo4jDataProvider neo4JDataProvider;
 
-        public HomeController(UserManager<ApplicationUser> userManager , ApplicationDbContext applicationDbContext)
+        private Neo4jDataProvider neo4JDataProvider;
+        private Neo4jDataProvider Neo4JDataProvider
         {
-            StorageService = new DBStorageService(applicationDbContext);
+            get
+            {
+                if (neo4JDataProvider != null)
+                    return neo4JDataProvider;
+                var configuration = StorageService.GetConfiguration();
+                neo4JDataProvider = new Neo4jDataProvider(configuration.Neo4jConnectionString, configuration.Neo4jUsername, configuration.Neo4jPass);
+                return neo4JDataProvider;
+            }
+        }
+
+        private Thread ProcessThread { get; set; }
+
+        public HomeController(UserManager<ApplicationUser> userManager, IStorageService storageService)
+        {
+            StorageService = storageService;
             this.userManager = userManager;
-            var configuration = StorageService.GetConfiguration();
-            this.neo4JDataProvider = new Neo4jDataProvider(configuration.Neo4jConnectionString, configuration.Neo4jUsername, configuration.Neo4jPass);
         }
 
         public string UserId => userManager.GetUserId(User);
@@ -44,6 +58,7 @@ namespace FCA_Recommender_System.Controllers
             var vmodel = new HomeIndexViewModel();
             vmodel.Movies = StorageService.GetAllMovies().ToList();
             vmodel.Categories = StorageService.GetAllCategories().ToList();
+            vmodel.Recomended = GetRecomendedMovies(vmodel.Movies).Take(10).ToList();
 
             return View(vmodel);
         }
@@ -167,7 +182,7 @@ namespace FCA_Recommender_System.Controllers
                 StorageService.AddMovieCategories(movieCategories);
             }
 
-            // Callculating lattice
+            // Calculating lattice
             var lattice = CallculateLattice();
 
             var configuration = StorageService.GetConfiguration();
@@ -211,7 +226,7 @@ namespace FCA_Recommender_System.Controllers
 
         private ConceptLattice CallculateLattice()
         {
-            var movies = StorageService.GetAllMovies().Take(100).ToList(); // taking 100
+            var movies = StorageService.GetAllMovies().ToList(); // taking 100
             var categories = StorageService.GetAllCategories().ToList();
             var movieCategories = StorageService.GetAllMovieCategories().ToList();
 
@@ -259,18 +274,18 @@ namespace FCA_Recommender_System.Controllers
 
         private void StoreLatticeInNeo4jDb(ConceptLattice lattice)
         {
-            neo4JDataProvider.ClearDatabase();
-            neo4JDataProvider.ImportFCALatticeLikeCSV(lattice);
+            Neo4JDataProvider.ClearDatabase();
+            Neo4JDataProvider.ImportFCALatticeLikeCSV(lattice);
         }
 
         private IEnumerable<Movie> GetRecomendedMovies(int movieId)
         {
             var movie = StorageService.GetMovie(movieId);
             var movieCategories = StorageService.GetMovieCategories(movieId);
-          
-            var recomendedmatches = neo4JDataProvider.SearchForObjects(movie.Name, movieCategories.Select(c => c.Title));
+
+            var recomendedmatches = Neo4JDataProvider.SearchForObjects(movie.Name, movieCategories.Select(c => c.Title));
             var movienames = new List<string>();
-            foreach(var match in recomendedmatches.OrderBy(rm => rm.Matches))
+            foreach (var match in recomendedmatches.OrderBy(rm => rm.Matches))
             {
                 movienames.AddRange(match.Node.Objects);
             }
@@ -280,24 +295,58 @@ namespace FCA_Recommender_System.Controllers
             return recomended;
         }
 
-        private IEnumerable<Movie> GetRecomendedMovies()
+        private IEnumerable<Movie> GetRecomendedMovies(IEnumerable<Movie> allMovies)
         {
-            //var userLikedMovies = StorageService.LikedMovies(UserId);
-            //var likedAttributes = userLikedMovies
-            //    .SelectMany(m => m.MovieCategories, (m, c) => new { m = m, mc = c })
-            //    .GroupBy(s => s.mc.).Select(m => new AttributeLikes { Likes = })
-            
 
-            //var recomendedmatches = neo4JDataProvider.SearchForObjects(movie.Name, movieCategories.Select(c => c.Title));
-            //var movienames = new List<string>();
-            //foreach (var match in recomendedmatches.OrderBy(rm => rm.Matches))
-            //{
-            //    movienames.AddRange(match.Node.Objects);
-            //}
-            //movienames = movienames.GroupBy(m => m).Select(g => g.First()).ToList();
-            //movienames.Remove(movie.Name);
-            var recomended = string.Empty;//StorageService.GetMoviesByNames(movienames);
-            return null;
+
+            var recomended = new List<string>();
+            var user = userManager.GetUserAsync(User).Result;
+            if (user != null)
+            {
+                if (ProcessThread == null || (!ProcessThread.IsAlive))
+                {
+                    ProcessThread = new Thread(ProcessLikedMovies);
+                    ProcessThread.Start();
+                }
+                if (!string.IsNullOrEmpty(user.SuggestedMovies))
+                {
+                    recomended = user.SuggestedMovies.Split(",").ToList();
+                }
+            }
+
+            // when there is no recommendations
+            if (recomended.Count == 0)
+            {
+                return allMovies;
+            }
+            var recomended_ = recomended.Select(m => int.Parse(m));
+                var result = allMovies.Where(m => recomended_.Contains(m.ID)).ToDictionary(r => r.ID, r => r);
+            return recomended_.Select(r => result[r]);
         }
+
+        private void ProcessLikedMovies()
+        {
+            try
+            {
+                var user = StorageService.dbContext.Users.FirstOrDefault(u => u.Id == UserId);
+                if (user == null) return;
+
+                var userLikedMovies = StorageService.LikedMovies(UserId).ToList();
+                var likedAttributes = userLikedMovies
+                    .SelectMany(m => m.MovieCategories, (m, c) => new { m = m, mc = c })
+                    .GroupBy(s => s.mc.Category).Select(m => new AttributeLikes { Likes = m.Count(), Attribute = m.Key.Title })
+                    .OrderByDescending(al => al.Likes);
+                var recomendedmovies = Neo4JDataProvider.SearchForObjects(likedAttributes, userLikedMovies.Select(m => m.Name));
+                var _rm = StorageService.GetMoviesByNames(recomendedmovies).ToDictionary(m => m.Name, m => m.ID);
+                user.SuggestedMovies = string.Join(",", recomendedmovies.Select(m => _rm[m]));
+                StorageService.dbContext.Users.Update(user);
+                StorageService.dbContext.SaveChanges();
+            }
+            catch(Exception e)
+            {
+
+            }
+        }
+
     }
 }

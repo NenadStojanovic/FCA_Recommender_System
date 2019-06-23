@@ -1,4 +1,5 @@
-﻿using StorageService.Models;
+﻿using FCA_Recommender_System.Data;
+using StorageService.Models;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -7,6 +8,7 @@ namespace FCA_Recommender_System.Services
 {
     public interface IStorageService
     {
+        ApplicationDbContext dbContext { get; }
         IEnumerable<Movie> GetAllMovies();
         Movie GetMovie(int id);
         IEnumerable<Movie> GetMoviesByNames(IEnumerable<string> names);

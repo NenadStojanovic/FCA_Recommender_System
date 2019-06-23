@@ -27,7 +27,7 @@ namespace Neo4jFCA
             }
             catch (Exception e)
             {
-                throw new Exception("Database failed to connect with folowing message : " + e.Message);
+                throw new Exception("Database failed to connect with following message : " + e.Message);
             }
         }
 
@@ -176,8 +176,6 @@ namespace Neo4jFCA
 
         public IEnumerable<NodeMatch> SearchForObjects(string _object, IEnumerable<string> attributes)
         {
-            ///MATCH (n:Concept) WHERE n.objects CONTAINS "Lethal_Weapon_4_(1998)" AND n.level = "1"
-            ///WITH n MATCH (n)-[r:intent]->(m) RETURN m
             var res = client.Cypher
                  .Match("(n:Concept)")
                  .Where("n.objects CONTAINS " + "'" + CSVNormalize(_object) + "'")
@@ -188,7 +186,7 @@ namespace Neo4jFCA
                  .Results;
             //return objectNames;
             var nodeMatches = new List<NodeMatch>();
-            foreach(var node in res)
+            foreach (var node in res)
             {
                 node.Objects = node.objects.Split(' ').Select(s => CSVDenormalize(s));
                 node.Attributes = node.attributes.Split(' ').Select(s => CSVDenormalize(s).Replace(" ", "_"));
@@ -202,9 +200,38 @@ namespace Neo4jFCA
             return nodeMatches;
         }
 
-        public IEnumerable<NodeMatch> SearchForObjects()
+        public IEnumerable<string> SearchForObjects(IEnumerable<AttributeLikes> liked, IEnumerable<string> likedMovies)
         {
-            throw new Exception();
+            var res = client.Cypher
+                 .Match("(n:Concept)")
+                 .Return(n => n.As<Neo4JNode>())
+                 .Results;
+
+            var matches = new List<NodeMatch>();
+            //var maxNode = res.Where(r => r.level == 0).First();
+            //var maxPoints = 0;
+            foreach (var node in res)
+            {
+                node.Objects = node.objects?.Split(' ').Select(s => CSVDenormalize(s)) ?? new List<string>();
+                node.Attributes = node.attributes?.Split(' ').Select(s => CSVDenormalize(s).Replace(" ", "_")) ?? new List<string>();
+                var points = liked.Where(l => node.Attributes.Any(a => a == l.Attribute)).Select(l => l.Likes).DefaultIfEmpty().Sum();
+                var nodeMatch = new NodeMatch { Matches = points, Node = node };
+                matches.Add(nodeMatch);
+                //if (maxPoints < points)
+                //{
+                //    maxPoints = points;
+                //    maxNode = node;
+                //}
+            }
+            matches = matches
+                .Where(m => m.Node.Objects.Any() && (m.Node.Objects.Count() == 1 && !m.Node.Objects.Intersect(likedMovies).Any()))
+                .OrderByDescending(m => m.Matches).ToList();
+
+            var movies = matches.Take(50)
+                .SelectMany(m => m.Node.Objects, (m, s) => s)
+                .Distinct();
+
+            return movies;
         }
 
         public class NodeMatch
