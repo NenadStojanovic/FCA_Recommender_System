@@ -9,30 +9,33 @@
         <a href="/Home/ControlPanel">Control Panel</a>
     </h1>*@
 <style>
-    .movieName{
-    text-align: center;
-    font-size: 35px;
-    font-weight: bold;
-    color:black;
+    .movieName {
+        text-align: left;
+        font-size: 30px;
+        font-weight: bold;
+        color: black;
+    }
+    .movieDirector{
+        font-size:20px;
     }
 </style>
 <div class="row">
     <div class="col-lg-12">
-        <h4>Moves recommended for you</h4>
+        <h4>Movies recommended for you</h4>
         <div class="col-md-12 no-padding">
             @foreach (var recomended in Model.Recomended.Take(10))
             {
-                <a href="@Url.Action("Movie", new { id = recomended.ID })" class="col-md-1 no-padding" style="width: 10%; height: 168px; overflow: hidden; text-overflow: ellipsis;">
+                <a href="@Url.Action("Movie", new { id = recomended.ID })" class="col-md-1 no-padding" style=" width: 10%; height: 168px; overflow: hidden; text-overflow: ellipsis;">
                     <img id="logo_@recomended.ID" src="@background" alt="300x300" class="img-thumbnail" style="width: 110px; height: 140px; padding: 0px 5px;" />
                     <p style="font-size: x-small">@recomended.Name</p>
                 </a>
             }
         </div>
     </div>
-    <div class="col-md-8">
+    <div class="col-md-12">
         <h2>Movies</h2>
         <div class="table-responsive">
-            <table  class="table table-bordered table-striped table-hover" id="moviesTable">
+            <table class="table table-bordered table-striped table-hover" id="moviesTable">
                 <thead>
                     <tr>
                         <td>Name</td>
@@ -43,8 +46,8 @@
                     @foreach (var movie in Model.Movies)
                     {
                         <tr>
-                            <td class="movieName"><a href="@Url.Action("Movie", new { id = movie.ID })">@movie.Name</a></td>
-                            <td>@movie.Director</td>
+                            <td class="movieName"><a style="color:black;" href="@Url.Action("Movie", new { id = movie.ID })">@movie.Name</a></td>
+                            <td class="movieDirector">@movie.Director</td>
                         </tr>
                     }
                 </tbody>
@@ -52,59 +55,34 @@
         </div>
     </div>
     @*<div class="col-md-4">
-        <h2>Categories</h2>
-        <div class="table-responsive">
-            <table class="table table-bordered table-striped table-hover">
-                <thead>
-                    <tr>
-                        <td>Name</td>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (var category in Model.Categories)
-                    {
+            <h2>Categories</h2>
+            <div class="table-responsive">
+                <table class="table table-bordered table-striped table-hover">
+                    <thead>
                         <tr>
-                            <td>@category.Title.Replace("_", " ")</td>
+                            <td>Name</td>
                         </tr>
-                    }
-                </tbody>
-            </table>
-        </div>
-    </div>*@
+                    </thead>
+                    <tbody>
+                        @foreach (var category in Model.Categories)
+                        {
+                            <tr>
+                                <td>@category.Title.Replace("_", " ")</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>*@
 </div>
 @section scripts {
     <script>
         var recomended = @Json.Serialize(Model.Recomended.Take(10).Select(m => new { id = m.ID, name = m.Name.Remove(m.Name.IndexOf("("))}).ToList());
 
-        for (var i = 0; i < recomended.length; i++) {
-            $.ajax({
-                index: i,
-                url: "https://api.themoviedb.org/3/search/movie",
-                data: {
-                    api_key: "bfeeff106cd2938769ad5341b42337d3",
-                    region: 'US',
-                    query: recomended[i].name,
-                    page: 1
-                },
-                method: 'GET',
-                dataType: 'jsonp',
-                start_time: new Date().getTime(),
-                success: function (response) {
-                    console.debug(response);
-                    var movies = response.results;
-                    var firstResult = movies[0];
-                    $("#logo_" + recomended[this.index].id).attr("src", "https://image.tmdb.org/t/p/w300/" + firstResult.poster_path)
-                },
-                error: function (response) {
-                    $("#logo_" + recomended[this.index].id).css("background: red;")
-                }
-            });
-        }
     </script>
-}
 
-@section Scripts {
     <script src="~/js/Index.js"></script>
 }
+
 
 
