@@ -37,7 +37,12 @@
                     <li><a asp-area="" asp-controller="Home" asp-action="Index">Home</a></li>
                     @if (User.Identity.IsAuthenticated)
                     {
-                        <li><a asp-area="" asp-controller="Home" asp-action="ControlPanel">Control panel</a></li>
+                        <li><a asp-area="" asp-controller="Home" asp-action="LikedMovies">Liked movies</a></li>
+                        if (User.IsInRole("Administrator"))
+                        {
+                            <li><a asp-area="" asp-controller="Home" asp-action="ControlPanel">Control panel</a></li>
+                        }
+
                     }
                 </ul>
                 @await Html.PartialAsync("_LoginPartial")

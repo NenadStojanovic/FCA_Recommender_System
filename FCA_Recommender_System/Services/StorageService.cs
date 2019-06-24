@@ -157,7 +157,7 @@ namespace FCA_Recommender_System.Services
                 // movies that have categories
                 .Where(m => m.MovieCategories.Any())
                 // max 200 movies
-                .Take(500);
+                .Take(100);
         }
 
         public static IQueryable<Category> LimitCategories(this DbSet<Category> categories, ApplicationDbContext context)

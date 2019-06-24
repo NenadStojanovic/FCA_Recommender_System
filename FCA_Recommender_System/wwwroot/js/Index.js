@@ -1,5 +1,8 @@
 ﻿$(document).ready(function () {
-    $('#moviesTable').DataTable();
+    $('#moviesTable').DataTable({
+        "lengthChange": false,
+        "Info": false
+    });
 });
 
 
