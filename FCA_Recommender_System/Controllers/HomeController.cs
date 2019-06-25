@@ -68,7 +68,7 @@ namespace FCA_Recommender_System.Controllers
             var vmodel = new HomeIndexViewModel();
             vmodel.Movies = StorageService.LikedMovies(UserId).ToList();
             vmodel.Categories = StorageService.GetAllCategories().ToList();
-            vmodel.Recomended = GetRecomendedMovies(vmodel.Movies).Take(10).ToList();
+            vmodel.Recomended = GetRecomendedMovies(StorageService.GetAllMovies()).Take(10).ToList();
 
             return View(vmodel);
         }
@@ -303,6 +303,17 @@ namespace FCA_Recommender_System.Controllers
             movienames = movienames.GroupBy(m => m).Select(g => g.First()).ToList();
             movienames.Remove(movie.Name);
             var recomended = StorageService.GetMoviesByNames(movienames);
+            var statistic = recomended
+                .Select(m => new
+                {
+                    movie = m.Name,
+                    m = m,
+                    attributeCount = m.MovieCategories.Select(mc => mc.Category.Title).Distinct().Count(),
+                    similarity = (
+                m.MovieCategories.Select(mc => mc.Category.Title).Distinct().Intersect(movieCategories.Select(mc_ => mc_.Title).Distinct()).Count() /
+                (float)m.MovieCategories.Select(mc => mc.Category.Title).Distinct().Count()) * 100
+                }).ToList();
+            recomended = statistic.OrderByDescending(s => s.similarity).Select(s => s.m).ToList();
             return recomended;
         }
 

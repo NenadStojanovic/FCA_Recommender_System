@@ -74,7 +74,7 @@ namespace FCA_Recommender_System.Services
         }
         public IEnumerable<Movie> GetMoviesByNames(IEnumerable<string> names)
         {
-            return dbContext.Movies.LimitMovies(MovieLimit).Where(m => names.Contains(m.Name)).ToList();
+            return dbContext.Movies.LimitMovies(MovieLimit).Where(m => names.Contains(m.Name)).Include(m => m.MovieCategories).ToList();
         }
         public void AddMovies(IEnumerable<Movie> movies)
         {
