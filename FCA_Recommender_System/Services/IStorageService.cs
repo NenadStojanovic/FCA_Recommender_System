@@ -8,6 +8,7 @@ namespace FCA_Recommender_System.Services
 {
     public interface IStorageService
     {
+        int MovieLimit { get; set; }
         ApplicationDbContext dbContext { get; }
         IEnumerable<Movie> GetAllMovies();
         Movie GetMovie(int id);

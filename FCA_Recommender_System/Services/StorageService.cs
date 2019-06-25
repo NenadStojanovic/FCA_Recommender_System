@@ -10,6 +10,14 @@ namespace FCA_Recommender_System.Services
 {
     public class DBStorageService : IStorageService
     {
+        private int movieLimit = 500;
+        public int MovieLimit { get => movieLimit;
+            set
+            {
+                MoviesCache = null;
+                CategoriesCache = null;
+                movieLimit = value;
+            } }
         public ApplicationDbContext dbContext { get; set; }
 
         public IEnumerable<Movie> MoviesCache;
@@ -36,12 +44,12 @@ namespace FCA_Recommender_System.Services
         public IEnumerable<Category> GetAllCategories()
         {
             if (CategoriesCache == null)
-                CategoriesCache = dbContext.Categories.LimitCategories(dbContext).ToList();
+                CategoriesCache = dbContext.Categories.LimitCategories(dbContext, MovieLimit).ToList();
             return CategoriesCache;
         }
         public Category GetCategory(int id)
         {
-            return dbContext.Categories.LimitCategories(dbContext).FirstOrDefault(c => c.ID == id);
+            return dbContext.Categories.LimitCategories(dbContext, MovieLimit).FirstOrDefault(c => c.ID == id);
         }
         public void AddCategories(IEnumerable<Category> categories)
         {
@@ -57,16 +65,16 @@ namespace FCA_Recommender_System.Services
         public IEnumerable<Movie> GetAllMovies()
         {
             if(MoviesCache == null)
-                MoviesCache = dbContext.Movies.LimitMovies().ToList();
+                MoviesCache = dbContext.Movies.LimitMovies(MovieLimit).ToList();
             return MoviesCache;
         }
         public Movie GetMovie(int id)
         {
-            return dbContext.Movies.LimitMovies().FirstOrDefault(m => m.ID == id);
+            return dbContext.Movies.LimitMovies(MovieLimit).FirstOrDefault(m => m.ID == id);
         }
         public IEnumerable<Movie> GetMoviesByNames(IEnumerable<string> names)
         {
-            return dbContext.Movies.LimitMovies().Where(m => names.Contains(m.Name)).ToList();
+            return dbContext.Movies.LimitMovies(MovieLimit).Where(m => names.Contains(m.Name)).ToList();
         }
         public void AddMovies(IEnumerable<Movie> movies)
         {
@@ -151,18 +159,18 @@ namespace FCA_Recommender_System.Services
 
     public static class StorageExtensions
     {
-        public static IQueryable<Movie> LimitMovies(this DbSet<Movie> movies)
+        public static IQueryable<Movie> LimitMovies(this DbSet<Movie> movies, int limit)
         {
             return movies
                 // movies that have categories
                 .Where(m => m.MovieCategories.Any())
                 // max 200 movies
-                .Take(500);
+                .Take(limit);
         }
 
-        public static IQueryable<Category> LimitCategories(this DbSet<Category> categories, ApplicationDbContext context)
+        public static IQueryable<Category> LimitCategories(this DbSet<Category> categories, ApplicationDbContext context, int limit)
         {
-            var movies = context.Movies.LimitMovies();
+            var movies = context.Movies.LimitMovies(limit);
             var _categories = context.MovieCategories.Where(mc => movies.Contains(mc.Movie)).Select(mc => mc.CategoryId).Distinct().ToList();
             return categories.Where(c => _categories.Any(_c => c.ID == _c));
         }

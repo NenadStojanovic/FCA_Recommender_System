@@ -226,6 +226,7 @@ namespace FCA_Recommender_System.Controllers
 
         private ConceptLattice CallculateLattice()
         {
+            StorageService.MovieLimit = 500;
             var movies = StorageService.GetAllMovies().ToList(); // taking 100
             var categories = StorageService.GetAllCategories().ToList();
             var movieCategories = StorageService.GetAllMovieCategories().ToList();

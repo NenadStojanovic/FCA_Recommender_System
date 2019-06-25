@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net.Http;
 
 namespace Neo4jFCA
 {
@@ -21,6 +22,10 @@ namespace Neo4jFCA
             this.user_name = username;
             this.password = password;
             client = new GraphClient(this.db_adres, this.user_name, this.password);
+            client = new GraphClient(db_adres,
+                new HttpClientWrapper(user_name, password,
+                new HttpClient() { Timeout = TimeSpan.FromMinutes(20) })
+                );
             try
             {
                 client.Connect();
