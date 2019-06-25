@@ -49,7 +49,7 @@ namespace FCA_Recommender_System
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IHostingEnvironment env)
+        public void Configure(IApplicationBuilder app, IHostingEnvironment env, IServiceProvider serviceProvider)
         {
             if (env.IsDevelopment())
             {
@@ -72,6 +72,65 @@ namespace FCA_Recommender_System
                     name: "default",
                     template: "{controller=Home}/{action=Index}/{id?}");
             });
+
+            CreateRolesAndAdminUser(serviceProvider);
+        }
+
+        private static void CreateRole(IServiceProvider serviceProvider, string roleName)
+        {
+            var roleManager = serviceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+
+            Task<bool> roleExists = roleManager.RoleExistsAsync(roleName);
+            roleExists.Wait();
+
+            if (!roleExists.Result)
+            {
+                Task<IdentityResult> roleResult = roleManager.CreateAsync(new IdentityRole(roleName));
+                roleResult.Wait();
+            }
+        }
+
+        private static void CreateRolesAndAdminUser(IServiceProvider serviceProvider)
+        {
+            string[] roleNames = { "Administrator", "User" };
+
+            foreach (string roleName in roleNames)
+            {
+                CreateRole(serviceProvider, roleName);
+            }
+            string adminUserEmail = "admin@test.com";
+            string adminPwd = "N3nadS@password";
+            AddUserToRole(serviceProvider, adminUserEmail, adminPwd, "Administrator");
+        }
+
+        private static void AddUserToRole(IServiceProvider serviceProvider, string userEmail, string userPwd, string roleName)
+        {
+            var userManager = serviceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+
+            Task<ApplicationUser> checkAppUser = userManager.FindByEmailAsync(userEmail);
+            checkAppUser.Wait();
+
+            ApplicationUser appUser = checkAppUser.Result;
+
+            if (checkAppUser.Result == null)
+            {
+                ApplicationUser newAppUser = new ApplicationUser
+                {
+                    Email = userEmail,
+                    UserName = userEmail
+                };
+
+                Task<IdentityResult> taskCreateAppUser = userManager.CreateAsync(newAppUser, userPwd);
+                taskCreateAppUser.Wait();
+
+                if (taskCreateAppUser.Result.Succeeded)
+                {
+                    appUser = newAppUser;
+                }
+            }
+
+            Task<IdentityResult> newUserRole = userManager.AddToRoleAsync(appUser, roleName);
+            newUserRole.Wait();
         }
     }
 }

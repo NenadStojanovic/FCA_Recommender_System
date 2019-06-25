@@ -15,18 +15,19 @@
         font-weight: bold;
         color: black;
     }
-    .movieDirector{
-        font-size:20px;
+
+    .movieDirector {
+        font-size: 20px;
     }
-    .tableHead{
-        background-color: cadetblue;
-    color: white;
-    font-size: 20px;
+
+    .movieRow:hover{
+        color:darkslategray !important;
+        background:lightgray !important;
     }
 </style>
 <div class="row">
     <div class="col-lg-12">
-        <h4>Movies recommended for you</h4>
+        <h2>Movies recommended for you</h2>
         <div class="col-md-12 no-padding">
             @foreach (var recomended in Model.Recomended.Take(10))
             {
@@ -38,26 +39,26 @@
         </div>
     </div>
     <div class="col-md-12">
-        <h2>Movies</h2>
-        <div class="table-responsive">
-            <table class="table table-bordered table-striped table-hover" id="moviesTable">
-                <thead class="tableHead">
-                    <tr>
-                        <td>Name</td>
-                        <td>Director</td>
-                    </tr>
-                </thead>
-                <tbody>
+        <h2>Liked movies</h2>
+        
+           
                     @foreach (var movie in Model.Movies)
                     {
-                        <tr>
-                            <td class="movieName"><a style="color:black;" href="@Url.Action("Movie", new { id = movie.ID })">@movie.Name</a></td>
-                            <td class="movieDirector">@movie.Director</td>
-                        </tr>
+                        <a href="@Url.Action("Movie", new { id = movie.ID })" style="color:black !important">
+                        <div class="col-md-12 movieRow" style=" padding: 5px; background: aliceblue;margin: 5px; border-left: 5px solid #6292ff;">
+                            <div class="col-md-2">
+                                <img id="liked_logo_@movie.ID" src="@background" alt="300x300" class="img-thumbnail" style="width: 110px; height: 140px; padding: 0px 5px;" />
+                            </div>
+                            <div class="col-md-7" style="margin-top:30px">
+                                <b style="font-size:35px; overflow: hidden; text-overflow: ellipsis; ">@movie.Name</b>
+                            </div>
+                            <div style="font-size:20px;margin-top:42px" class="col-md-3">
+                                @movie.Director
+                            </div>
+                        </div>
+                        </a>
                     }
-                </tbody>
-            </table>
-        </div>
+      
     </div>
     @*<div class="col-md-4">
             <h2>Categories</h2>
@@ -83,10 +84,10 @@
 @section scripts {
     <script>
         var recomended = @Json.Serialize(Model.Recomended.Take(10).Select(m => new { id = m.ID, name = m.Name.Remove(m.Name.IndexOf("("))}).ToList());
-       
+         var likedMovies =  @Json.Serialize(Model.Movies.Select(m => new { id = m.ID, name = m.Name.Remove(m.Name.IndexOf("("))}).ToList());
     </script>
 
-    <script src="~/js/Index.js"></script>
+    <script src="~/js/LikedMovies.js"></script>
 }
 
 

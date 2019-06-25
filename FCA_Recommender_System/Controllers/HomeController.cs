@@ -63,6 +63,16 @@ namespace FCA_Recommender_System.Controllers
             return View(vmodel);
         }
 
+        public IActionResult LikedMovies()
+        {
+            var vmodel = new HomeIndexViewModel();
+            vmodel.Movies = StorageService.LikedMovies(UserId).ToList();
+            vmodel.Categories = StorageService.GetAllCategories().ToList();
+            vmodel.Recomended = GetRecomendedMovies(vmodel.Movies).Take(10).ToList();
+
+            return View(vmodel);
+        }
+
         public IActionResult Movie(int id)
         {
             var vmodel = new MovieViewModel();

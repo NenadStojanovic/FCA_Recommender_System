@@ -17,6 +17,8 @@
     <!-- AdminLTE Skins. Choose a skin from the css/skins
          folder instead of downloading all of them to reduce the load. -->
     <link rel="stylesheet" href="~/dist/css/skins/_all-skins.min.css">
+    <!--DataTables-->
+    <link href="~/lib/DataTable/jquery.dataTables.min.css" rel="stylesheet" />
 </head>
 <body>
     <nav class="navbar navbar-inverse navbar-fixed-top">
@@ -35,7 +37,12 @@
                     <li><a asp-area="" asp-controller="Home" asp-action="Index">Home</a></li>
                     @if (User.Identity.IsAuthenticated)
                     {
-                        <li><a asp-area="" asp-controller="Home" asp-action="ControlPanel">Control panel</a></li>
+                        <li><a asp-area="" asp-controller="Home" asp-action="LikedMovies">Liked movies</a></li>
+                        if (User.IsInRole("Administrator"))
+                        {
+                            <li><a asp-area="" asp-controller="Home" asp-action="ControlPanel">Control panel</a></li>
+                        }
+
                     }
                 </ul>
                 @await Html.PartialAsync("_LoginPartial")
@@ -62,7 +69,8 @@
     <script src="~/bower_components/jquery-sparkline/dist/jquery.sparkline.min.js"></script>
     <!-- SlimScroll -->
     <script src="~/bower_components/jquery-slimscroll/jquery.slimscroll.min.js"></script>
-
+    <!--DataTables-->
+    <script src="~/lib/DataTable/jquery.dataTables.min.js"></script>
     @RenderSection("Scripts", required: false)
 </body>
 </html>
