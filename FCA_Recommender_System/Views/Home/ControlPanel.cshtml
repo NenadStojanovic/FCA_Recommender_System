@@ -1,9 +1,24 @@
-﻿@model FCA_Recommender_System.Models.ControlPanelViewModel
+﻿@model StorageService.Models.ConfigurationAndStatistics
 
 @{
     Layout = "~/Views/Shared/_AdminLTELayout.cshtml";
     ViewData["Title"] = "ControlPanel";
 }
+<style>
+    #loaderDiv {
+        position: fixed;
+        padding: 0;
+        margin: 0;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.65);
+        background-image: url('../../wwwroot/images/ajax-loader.gif');
+        background-repeat: no-repeat;
+        background-position: center center;
+    }
+</style>
 
 <h2>ControlPanel</h2>
 <hr />
@@ -41,23 +56,23 @@
         <div class="row">
             <div class="col-md-4">
                 <p>Objects count <strong>(movies count)</strong></p>
-                <p>@Model.ConfigurationAndStatistics.ObjectsCount</p>
+                <p>@Model.ObjectsCount</p>
                 <p>Attributes count <strong>(categories count)</strong></p>
-                <p>@Model.ConfigurationAndStatistics.AttributesCount</p>
+                <p>@Model.AttributesCount</p>
             </div>
             <div class="col-md-4">
                 <p>Formal concepts count</p>
-                <p>@Model.ConfigurationAndStatistics.ConceptsCount</p>
+                <p>@Model.ConceptsCount</p>
                 <p>Lattice height</p>
-                <p>@Model.ConfigurationAndStatistics.LatticeHeight</p>
+                <p>@Model.LatticeHeight</p>
             </div>
-            @if (!Model.ConfigurationAndStatistics.LatticeCalculationTime.Equals(new DateTime(1, 1, 1, 0, 0, 0)))
+            @if (!Model.LatticeCalculationTime.Equals(new DateTime(1, 1, 1, 0, 0, 0)))
             {
                 <div class="text-center">
                     <span style="font-size: 100px;" class="fa fa-check-circle text-green"></span>
-                    <p><small>@Model.ConfigurationAndStatistics.LatticeCalculationTime</small></p>
+                    <p><small>@Model.LatticeCalculationTime</small></p>
                     <div>
-                        <form  asp-controller="Home" asp-action="RegenerateLattice" method="post">
+                        <form asp-controller="Home" asp-action="RegenerateLattice" method="post" id="calculateForm">
                             <button type="submit" class="btn btn-success btn-xs">Recalculate lattice</button>
                         </form>
                     </div>
@@ -81,16 +96,24 @@
         </div>
         <div class="box-body">
             <div class="form-group">
-                @Html.LabelFor(m => m.ConfigurationAndStatistics.Neo4jConnectionString)
-                @Html.TextBox("Neo4jConnectionString", Model.ConfigurationAndStatistics.Neo4jConnectionString, new { @class = "form-control" })
+                @Html.HiddenFor(m => m.ID)
+            </div>
+
+            <div class="form-group">
+                @Html.LabelFor(m => m.Neo4jConnectionString)
+                @Html.TextBox("Neo4jConnectionString", Model.Neo4jConnectionString, new { @class = "form-control" })
             </div>
             <div class="form-group">
-                @Html.LabelFor(m => m.ConfigurationAndStatistics.Neo4jUsername)
-                @Html.TextBox("Neo4jUsername", Model.ConfigurationAndStatistics.Neo4jUsername, new { @class = "form-control" })
+                @Html.LabelFor(m => m.Neo4jUsername)
+                @Html.TextBox("Neo4jUsername", Model.Neo4jUsername, new { @class = "form-control" })
             </div>
             <div class="form-group">
-                @Html.LabelFor(m => m.ConfigurationAndStatistics.Neo4jPass)
-                @Html.TextBox("Neo4jPass", Model.ConfigurationAndStatistics.Neo4jPass, new { @type = "password", @class = "form-control" })
+                @Html.LabelFor(m => m.Neo4jPass)
+                @Html.TextBox("Neo4jPass", Model.Neo4jPass, new { @type = "password", @class = "form-control" })
+            </div>
+            <div class="form-group">
+                @Html.LabelFor(m => m.NumOfMoviesForCalculation)
+                @Html.TextBox("NumOfMoviesForCalculation", Model.NumOfMoviesForCalculation, new { @type = "number", @class = "form-control" })
             </div>
         </div>
         <div class="box-footer">
@@ -98,3 +121,10 @@
         </div>
     </form>
 </div>
+<div hidden id="loaderDiv"></div>
+
+<script>
+// $("#calculateForm").submit(function(e) {
+//    $("#loaderDiv").show();
+//});
+</script>

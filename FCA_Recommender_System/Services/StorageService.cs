@@ -39,6 +39,7 @@ namespace FCA_Recommender_System.Services
         public DBStorageService(ApplicationDbContext dbContext)
         {
             this.dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
+            this.MovieLimit = dbContext.ConfigurationAndStatistics.FirstOrDefault()?.NumOfMoviesForCalculation!= null ? dbContext.ConfigurationAndStatistics.FirstOrDefault().NumOfMoviesForCalculation :  500;
         }
 
         public IEnumerable<Category> GetAllCategories()
@@ -150,8 +151,26 @@ namespace FCA_Recommender_System.Services
         }
         public void UpdateConfiguration(ConfigurationAndStatistics configuration)
         {
-            dbContext.ConfigurationAndStatistics.Update(configuration);
-            dbContext.SaveChanges();
+            using (var dbContextTransaction = dbContext.Database.BeginTransaction())
+            {
+                try
+                {
+                    var config = dbContext.ConfigurationAndStatistics.Find(configuration.ID);
+                    config.Neo4jConnectionString = configuration.Neo4jConnectionString;
+                    config.Neo4jPass = configuration.Neo4jPass;
+                    config.Neo4jUsername = configuration.Neo4jUsername;
+                    config.NumOfMoviesForCalculation = configuration.NumOfMoviesForCalculation;
+
+                    dbContext.Entry(config).State = EntityState.Modified;
+                    dbContext.SaveChanges();
+                    dbContextTransaction.Commit();
+                }
+                catch(Exception ex)
+                {
+                    dbContextTransaction.Rollback();
+                }
+            }
+
         }
 
 

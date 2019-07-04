@@ -49,6 +49,8 @@ namespace FCA_Recommender_System.Controllers
         {
             StorageService = storageService;
             this.userManager = userManager;
+
+            //StorageService.MovieLimit = 100;
         }
 
         public string UserId => userManager.GetUserId(User);
@@ -99,8 +101,7 @@ namespace FCA_Recommender_System.Controllers
         [Authorize]
         public IActionResult ControlPanel()
         {
-            var model = new ControlPanelViewModel();
-            model.ConfigurationAndStatistics = StorageService.GetConfiguration();
+            var model = StorageService.GetConfiguration();
             return View(model);
         }
 
@@ -236,7 +237,7 @@ namespace FCA_Recommender_System.Controllers
 
         private ConceptLattice CallculateLattice()
         {
-            StorageService.MovieLimit = 500;
+            
             var movies = StorageService.GetAllMovies().ToList(); // taking 100
             var categories = StorageService.GetAllCategories().ToList();
             var movieCategories = StorageService.GetAllMovieCategories().ToList();

@@ -3741,4 +3741,10 @@
     <TypeScriptCompile Include="wwwroot\bower_components\moment\moment.d.ts" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Content Update="wwwroot\images\ajax-loader.gif">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
 </Project>
